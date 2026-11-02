@@ -1,16 +1,37 @@
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import ForeignKey, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, func, Integer, Numeric, String, DateTime
 from app.core.db import Base
 from datetime import datetime
+from app.enum import OrderStatusEnum
+from decimal import Decimal
 
 class Order(Base):
     __tablename__ = "orders"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    order_item: Mapped[int] = mapped_column(ForeignKey("dishes.id"))
     table_id: Mapped[int] = mapped_column(ForeignKey("tables.id"))
-    restaurant_id: Mapped[int] = mapped_column(ForeignKey("restaurants.id"))
+    restaurant_id: Mapped[int] = mapped_column(ForeignKey("restaurants.id"), index=True)
+    status : Mapped[OrderStatusEnum] = mapped_column(default=OrderStatusEnum.NEW)
+    total: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+    comment: Mapped[str | None] = mapped_column(String(500))
+    external_id: Mapped[str | None] = mapped_column(String(64))
 
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+        )
+    items: Mapped[list["OrderItem"]] = relationship(
+        back_populates="order",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
-    
+class OrderItem(Base):
+    __tablename__ = "order_items"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    order_id: Mapped[int] = mapped_column(ForeignKey("orders.id", ondelete="CASCADE"), index=True)
+    dish_id: Mapped[int] = mapped_column(ForeignKey("dishes.id", ondelete="RESTRICT"), index=True)
+    quantity: Mapped[int] 
+    price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+
+    order: Mapped["Order"] = relationship(back_populates="items")
