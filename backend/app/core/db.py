@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 from app.core.config import settings
-from sqlalchemy import event
+from sqlalchemy import event, MetaData
 
 engine = create_async_engine(
     settings.DATABASE_URL, echo=settings.DEBUG
@@ -19,6 +19,15 @@ AsyncSessionLocal = async_sessionmaker (
 )
 
 class Base(DeclarativeBase):
-    pass
+    from sqlalchemy import MetaData
+
+class Base(DeclarativeBase):
+    metadata = MetaData(naming_convention={
+        "ix": "ix_%(column_0_label)s",
+        "uq": "uq_%(table_name)s_%(column_0_name)s",
+        "ck": "ck_%(table_name)s_%(constraint_name)s",
+        "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+        "pk": "pk_%(table_name)s",
+    })
 
     

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, ForeignKey, Numeric, UniqueConstraint
+from sqlalchemy import String, ForeignKey, Numeric, UniqueConstraint, text
 from app.core.db import Base
 from decimal import Decimal
 
@@ -11,10 +11,10 @@ class Category(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     restaurant_id: Mapped[int] = mapped_column(ForeignKey("restaurants.id"), index=True)
     name: Mapped[str] = mapped_column(String(50))
-    sort_order: Mapped[int] = mapped_column(default=0)
+    sort_order: Mapped[int] = mapped_column(default=0, server_default=text("0"))
 
     dishes: Mapped[list["Dish"]] = relationship(
-        back_populates="category", cascade="all, delete-orphan", passive_deletes=True
+        back_populates="category", passive_deletes="all"
     )
 
 class Dish(Base):
@@ -28,7 +28,7 @@ class Dish(Base):
     name: Mapped[str] = mapped_column(String(127))
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
 
-    is_active: Mapped[bool] = mapped_column(default=True)
+    is_active: Mapped[bool] = mapped_column(default=True, server_default=text("1"))
 
     category: Mapped["Category"] = relationship(
     back_populates="dishes"
