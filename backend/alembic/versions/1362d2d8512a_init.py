@@ -1,8 +1,8 @@
 """init
 
-Revision ID: 721aefbcbe5d
+Revision ID: 1362d2d8512a
 Revises: 
-Create Date: 2026-11-02 04:42:53.425893
+Create Date: 2026-11-03 23:34:02.691313
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '721aefbcbe5d'
+revision: str = '1362d2d8512a'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,19 +25,19 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
     sa.Column('api_key_hash', sa.String(length=64), nullable=False),
-    sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default=sa.text('1'), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('api_key_hash')
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_restaurants')),
+    sa.UniqueConstraint('api_key_hash', name=op.f('uq_restaurants_api_key_hash'))
     )
     op.create_table('categories',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('restaurant_id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=50), nullable=False),
-    sa.Column('sort_order', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('restaurant_id', 'name')
+    sa.Column('sort_order', sa.Integer(), server_default=sa.text('0'), nullable=False),
+    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], name=op.f('fk_categories_restaurant_id_restaurants')),
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_categories')),
+    sa.UniqueConstraint('restaurant_id', 'name', name=op.f('uq_categories_restaurant_id'))
     )
     with op.batch_alter_table('categories', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_categories_restaurant_id'), ['restaurant_id'], unique=False)
@@ -47,11 +47,11 @@ def upgrade() -> None:
     sa.Column('restaurant_id', sa.Integer(), nullable=False),
     sa.Column('number', sa.Integer(), nullable=False),
     sa.Column('qr_token', sa.String(length=36), nullable=False),
-    sa.Column('is_active', sa.Boolean(), nullable=False),
-    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('qr_token'),
-    sa.UniqueConstraint('restaurant_id', 'number')
+    sa.Column('is_active', sa.Boolean(), server_default=sa.text('1'), nullable=False),
+    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], name=op.f('fk_tables_restaurant_id_restaurants')),
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_tables')),
+    sa.UniqueConstraint('qr_token', name=op.f('uq_tables_qr_token')),
+    sa.UniqueConstraint('restaurant_id', 'number', name=op.f('uq_tables_restaurant_id'))
     )
     with op.batch_alter_table('tables', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_tables_restaurant_id'), ['restaurant_id'], unique=False)
@@ -63,11 +63,11 @@ def upgrade() -> None:
     sa.Column('external_id', sa.String(length=64), nullable=True),
     sa.Column('name', sa.String(length=127), nullable=False),
     sa.Column('price', sa.Numeric(precision=10, scale=2), nullable=False),
-    sa.Column('is_active', sa.Boolean(), nullable=False),
-    sa.ForeignKeyConstraint(['category_id'], ['categories.id'], ondelete='RESTRICT'),
-    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ondelete='RESTRICT'),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('restaurant_id', 'external_id')
+    sa.Column('is_active', sa.Boolean(), server_default=sa.text('1'), nullable=False),
+    sa.ForeignKeyConstraint(['category_id'], ['categories.id'], name=op.f('fk_dishes_category_id_categories'), ondelete='RESTRICT'),
+    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], name=op.f('fk_dishes_restaurant_id_restaurants'), ondelete='RESTRICT'),
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_dishes')),
+    sa.UniqueConstraint('restaurant_id', 'external_id', name=op.f('uq_dishes_restaurant_id'))
     )
     with op.batch_alter_table('dishes', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_dishes_category_id'), ['category_id'], unique=False)
@@ -82,9 +82,9 @@ def upgrade() -> None:
     sa.Column('comment', sa.String(length=500), nullable=True),
     sa.Column('external_id', sa.String(length=64), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ),
-    sa.ForeignKeyConstraint(['table_id'], ['tables.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], name=op.f('fk_orders_restaurant_id_restaurants')),
+    sa.ForeignKeyConstraint(['table_id'], ['tables.id'], name=op.f('fk_orders_table_id_tables')),
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_orders'))
     )
     with op.batch_alter_table('orders', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_orders_restaurant_id'), ['restaurant_id'], unique=False)
@@ -95,9 +95,9 @@ def upgrade() -> None:
     sa.Column('dish_id', sa.Integer(), nullable=False),
     sa.Column('quantity', sa.Integer(), nullable=False),
     sa.Column('price', sa.Numeric(precision=10, scale=2), nullable=False),
-    sa.ForeignKeyConstraint(['dish_id'], ['dishes.id'], ondelete='RESTRICT'),
-    sa.ForeignKeyConstraint(['order_id'], ['orders.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id')
+    sa.ForeignKeyConstraint(['dish_id'], ['dishes.id'], name=op.f('fk_order_items_dish_id_dishes'), ondelete='RESTRICT'),
+    sa.ForeignKeyConstraint(['order_id'], ['orders.id'], name=op.f('fk_order_items_order_id_orders'), ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_order_items'))
     )
     with op.batch_alter_table('order_items', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_order_items_dish_id'), ['dish_id'], unique=False)

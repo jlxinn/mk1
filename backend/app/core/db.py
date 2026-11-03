@@ -14,12 +14,9 @@ if "sqlite" in settings.DATABASE_URL:
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
 
-AsyncSessionLocal = async_sessionmaker (
+AsyncSessionLocal = async_sessionmaker(
     engine, expire_on_commit=False, autoflush=False
 )
-
-class Base(DeclarativeBase):
-    from sqlalchemy import MetaData
 
 class Base(DeclarativeBase):
     metadata = MetaData(naming_convention={
