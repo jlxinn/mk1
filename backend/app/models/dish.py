@@ -35,6 +35,3 @@ class Dish(Base):
     category: Mapped["Category"] = relationship(
         back_populates="dishes"
     )
-    orderitem: Mapped["OrderItem"] = relationship(
-        back_populates="dish"
-    )

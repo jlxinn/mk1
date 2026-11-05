@@ -4,6 +4,7 @@ from app.core.db import Base
 from datetime import datetime
 from app.enums import OrderStatusEnum
 from decimal import Decimal
+from app.models.dish import Dish
 
 class Order(Base):
     __tablename__ = "orders"
