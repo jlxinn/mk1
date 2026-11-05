@@ -6,8 +6,8 @@ from app.schemas.dish import CategoryResponse
 
 async def get_rest_menu_service(db: AsyncSession, rest_id: int) -> list[CategoryResponse]:
 
-    if not repo_rest_is_exist:
-        raise HTTPException(status_code=404, detail="Рестроран не найден")
+    if not await repo_rest_is_exist(db, rest_id):
+        raise HTTPException(status_code=404, detail="Ресторан не найден")
 
     categories = await repo_get_menu(db, rest_id)
 
