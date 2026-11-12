@@ -15,4 +15,4 @@ async def get_menu(db: AsyncSession, restaurant_id: int) -> list[Category]:
     result = await db.execute(query)
     categories = result.scalars().all()
 
-    return categories
+    return list(categories)

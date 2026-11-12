@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, func, Integer, Numeric, String, DateTime, CheckConstraint
+from sqlalchemy import ForeignKey, func, Numeric, String, DateTime, CheckConstraint
 from app.core.db import Base
 from datetime import datetime
 from app.enums import OrderStatusEnum

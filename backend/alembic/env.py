@@ -22,7 +22,7 @@ config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 target_metadata = Base.metadata
 
-is_sqlite = "sqlite" in config.get_main_option("sqlalchemy.url")
+is_sqlite = "sqlite" in (config.get_main_option("sqlalchemy.url") or "")
 
 
 def run_migrations_offline() -> None:

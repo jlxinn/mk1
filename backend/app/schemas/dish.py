@@ -15,4 +15,3 @@ class CategoryResponse(BaseModel):
     name: str
     sort_order: int
     dishes: list[DishResponse] = Field(default_factory=list)
-    
